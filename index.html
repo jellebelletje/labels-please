@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Labels, Please v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #1a1a1a;
+      --text: #e0e0e0;
+      --accent: #00ff41;
+      --red: #ff4444;
+      --yellow: #ffd700;
+      --btn-bg: #2a2a2a;
+      --btn-border: #00ff41;
+      --btn-hover-bg: #003d10;
+      --btn-disabled-bg: #1a1a1a;
+      --btn-disabled-border: #444;
+      --shadow: #000;
+      --font-pixel: 'Press Start 2P', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-pixel);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      max-width: 1066px;
+      width: 100%;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ===== LOGIN SCREEN ===== */
+    #login-screen .login-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 4px solid #333;
+      border-radius: 4px;
+    }
+
+    #login-screen .login-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .login-form label {
+      font-size: 11px;
+      color: var(--accent);
+      align-self: flex-start;
+    }
+
+    .login-form input {
+      width: 100%;
+      font-family: var(--font-pixel);
+      font-size: 12px;
+      padding: 14px 16px;
+      background: #111;
+      color: var(--text);
+      border: 3px solid #444;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .login-form input:focus {
+      border-color: var(--accent);
+    }
+
+    .login-form input::placeholder {
+      color: #555;
+      font-family: var(--font-pixel);
+      font-size: 10px;
+    }
+
+    .login-error {
+      font-size: 10px;
+      color: var(--red);
+      min-height: 18px;
+      text-align: center;
+    }
+
+    .field-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ===== SHARED BUTTON STYLES ===== */
+    .btn {
+      font-family: var(--font-pixel);
+      font-size: 14px;
+      padding: 16px 32px;
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 4px solid var(--btn-border);
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0 var(--shadow);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+      outline: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover-bg);
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--shadow);
+    }
+
+    .btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 0 0 0 var(--shadow);
+    }
+
+    .btn:disabled {
+      background: var(--btn-disabled-bg);
+      border-color: var(--btn-disabled-border);
+      color: #555;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn:disabled:hover {
+      background: var(--btn-disabled-bg);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-start {
+      margin-top: 8px;
+      font-size: 16px;
+      padding: 18px 48px;
+      border-color: var(--yellow);
+    }
+
+    .btn-start:hover {
+      background: #3d3000;
+    }
+
+    /* ===== GAME SCREEN ===== */
+    #game-screen {
+      position: relative;
+    }
+
+    #timer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 10px 0;
+      margin-bottom: 10px;
+    }
+
+    #timer-display {
+      font-family: var(--font-pixel);
+      font-size: 20px;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+      letter-spacing: 3px;
+    }
+
+    #timer-display.warning {
+      color: var(--yellow);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+
+    #timer-display.danger {
+      color: var(--red);
+      text-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
+      animation: timerPulse 0.5s ease-in-out infinite alternate;
+    }
+
+    #scenario-indicator {
+      font-family: var(--font-pixel);
+      font-size: 11px;
+      color: #888;
+    }
+
+    #scene {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 4px solid #333;
+      border-radius: 4px;
+      cursor: default;
+      transition: opacity 0.3s ease;
+    }
+
+    #scene.clickable {
+      cursor: pointer;
+    }
+
+    #scene.fade {
+      opacity: 0;
+    }
+
+    #click-hint {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      color: #666;
+      margin-top: 12px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    #buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+      width: 100%;
+    }
+
+    .btn-prev, .btn-next-nav {
+      font-size: 14px;
+      padding: 16px 32px;
+    }
+
+    .btn-prev {
+      border-color: #ff8c00;
+    }
+
+    .btn-prev:hover {
+      background: #3d2200;
+    }
+
+    .btn-next-nav {
+      border-color: var(--accent);
+    }
+
+    .review-badge {
+      font-family: var(--font-pixel);
+      font-size: 9px;
+      color: #888;
+      background: #222;
+      border: 2px solid #444;
+      padding: 6px 12px;
+      margin-top: 8px;
+    }
+
+    /* ===== MUSIC TOGGLE ===== */
+    #music-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      font-family: var(--font-pixel);
+      font-size: 9px;
+      padding: 10px 14px;
+      background: rgba(42, 42, 42, 0.9);
+      color: var(--text);
+      border: 3px solid #555;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+      transition: transform 0.1s, box-shadow 0.1s, border-color 0.2s;
+      z-index: 100;
+    }
+
+    #music-toggle:hover {
+      border-color: var(--accent);
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 var(--shadow);
+    }
+
+    #music-toggle.active {
+      border-color: var(--accent);
+    }
+
+    /* ===== END SCREEN ===== */
+    #end-screen {
+      padding: 40px 20px;
+      animation: fadeIn 0.8s ease;
+    }
+
+    .end-title {
+      font-size: 28px;
+      margin-bottom: 10px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .end-title.win {
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(0, 255, 65, 0.5), 3px 3px 0 #000;
+    }
+
+    .end-title.lose {
+      color: var(--red);
+      text-shadow: 0 0 20px rgba(255, 68, 68, 0.5), 3px 3px 0 #000;
+    }
+
+    .end-subtitle {
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 30px;
+    }
+
+    .end-stars {
+      font-size: 32px;
+      text-shadow: 2px 2px 0 #000;
+      margin-bottom: 20px;
+    }
+
+    .end-stars.win { color: var(--yellow); }
+    .end-stars.lose { color: #555; }
+
+    /* Score Breakdown */
+    .score-box {
+      background: #111;
+      border: 3px solid #333;
+      padding: 24px 32px;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .score-total {
+      font-size: 18px;
+      color: var(--yellow);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #222;
+    }
+
+    .score-row:last-child {
+      border-bottom: none;
+    }
+
+    .score-label { color: #999; }
+    .score-value { color: var(--text); }
+    .score-value.good { color: var(--accent); }
+    .score-value.bad { color: var(--red); }
+
+    /* Leaderboard */
+    .leaderboard-section {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-title {
+      font-size: 14px;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 16px;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border: 3px solid #333;
+      background: #111;
+      overflow: hidden;
+    }
+
+    .lb-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      font-size: 10px;
+      border-bottom: 1px solid #222;
+    }
+
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:nth-child(even) { background: #0d0d0d; }
+
+    .lb-row.header {
+      background: #222;
+      color: var(--accent);
+      font-size: 9px;
+    }
+
+    .lb-row.highlight {
+      background: rgba(0, 255, 65, 0.1);
+      border-left: 4px solid var(--accent);
+    }
+
+    .lb-rank { width: 50px; text-align: center; }
+    .lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .lb-score { width: 80px; text-align: right; color: var(--yellow); }
+
+    .lb-row.header .lb-score { color: var(--accent); }
+
+    .lb-empty {
+      text-align: center;
+      padding: 20px;
+      font-size: 9px;
+      color: #555;
+    }
+
+    .leaderboard-loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 9px;
+      color: #666;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .btn-restart {
+      border-color: var(--yellow);
+    }
+
+    .btn-restart:hover {
+      background: #3d3000;
+    }
+
+    .credits {
+      margin-top: 30px;
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      color: #555;
+      text-align: center;
+      line-height: 2.2;
+    }
+
+    .credits a {
+      color: #777;
+      text-decoration: none;
+    }
+
+    .credits a:hover {
+      color: var(--accent);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glow {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.3); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes timerPulse {
+      from { opacity: 1; }
+      to { opacity: 0.5; }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .btn { font-size: 10px; padding: 12px 20px; }
+      .btn-start { font-size: 12px; padding: 14px 32px; }
+      .btn-nav { font-size: 9px; padding: 10px 14px; }
+      #timer-display { font-size: 16px; }
+      #scenario-indicator { font-size: 9px; }
+      .end-title { font-size: 18px; }
+      .score-total { font-size: 14px; }
+      .score-row { font-size: 8px; }
+      .lb-row { font-size: 8px; padding: 8px 10px; }
+      .login-form label { font-size: 9px; }
+      .login-form input { font-size: 10px; padding: 12px; }
+      #music-toggle { font-size: 7px; padding: 8px 10px; }
+      #click-hint { font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen" class="screen active">
+    <img class="login-image" src="images/a1open.png" alt="Labels, Please">
+    <div class="login-form">
+      <div class="field-group">
+        <label for="player-name">Naam</label>
+        <input type="text" id="player-name" placeholder="Vul je naam in..." autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label for="player-password">Wachtwoord</label>
+        <input type="password" id="player-password" placeholder="Voer het wachtwoord in..." autocomplete="off">
+      </div>
+      <div class="login-error" id="login-error"></div>
+      <button class="btn btn-start" id="start-btn">Start</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div id="game-screen" class="screen">
+    <div id="timer-bar">
+      <div id="timer-display">03:00</div>
+      <div id="scenario-indicator"></div>
+    </div>
+    <img id="scene" src="" alt="Scene">
+    <div id="click-hint">Klik om door te gaan</div>
+    <div id="buttons"></div>
+  </div>
+
+  <!-- ===== END SCREEN ===== -->
+  <div id="end-screen" class="screen">
+    <div class="end-title" id="end-title"></div>
+    <div class="end-stars" id="end-stars"></div>
+    <div class="end-subtitle" id="end-subtitle"></div>
+
+    <div class="score-box" id="score-box">
+      <div class="score-total" id="score-total"></div>
+      <div class="score-row">
+        <span class="score-label">Goede antwoorden</span>
+        <span class="score-value" id="score-correct"></span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Antwoordpunten</span>
+        <span class="score-value" id="score-answer-pts"></span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Resterende tijd</span>
+        <span class="score-value" id="score-time-left"></span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">Tijdbonus</span>
+        <span class="score-value" id="score-time-pts"></span>
+      </div>
+    </div>
+
+    <div class="leaderboard-section" id="leaderboard-section">
+      <div class="leaderboard-title">Leaderboard</div>
+      <div class="leaderboard-table" id="leaderboard-table">
+        <div class="leaderboard-loading" id="lb-loading">Laden...</div>
+      </div>
+    </div>
+
+    <button class="btn btn-restart" id="restart-btn">Opnieuw Spelen</button>
+
+    <div class="credits">
+      <p>Game created by Jelmar Groot under an MIT licence.</p>
+      <p>Music by Eric Matyas &mdash; <a href="https://soundimage.org" target="_blank">soundimage.org</a></p>
+    </div>
+  </div>
+
+  <!-- ===== MUSIC TOGGLE ===== -->
+  <button id="music-toggle">Muziek Aan</button>
+  <audio id="bgm" src="audio/bgm.mp3" loop preload="none"></audio>
+
+  <script>
+    // =============================================
+    // Google Sheets API URL — fill in after deploying
+    // your Google Apps Script web app
+    // =============================================
+    const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyBWoX-9GM9e8vSX6Qo86HXxmN2v-LqVtZReXBaDOfq6fHBMqZJbavf8EdFFrns6KLHcw/exec';
+
+    // =============================================
+    // GAME ENGINE
+    // =============================================
+    const Game = {
+      // --- Auth ---
+      playerName: '',
+      PASSWORD: 'staatsgeheim',
+
+      // --- Phase ---
+      phase: 'login', // 'login' | 'intro' | 'scenario' | 'feedback' | 'end'
+
+      // --- Intro ---
+      introIndex: 0,
+      INTRO_IMAGES: ['a', 'b', 'c', 'c1', 'd', 'e', 'e1', 'f', 'g'],
+
+      // --- Scenarios ---
+      scenarioIndex: 1,
+      TOTAL_SCENARIOS: 10,
+      CORRECT_ANSWERS: {
+        1: 'b', 2: 'b', 3: 'a', 4: 'a', 5: 'a',
+        6: 'b', 7: 'b', 8: 'b', 9: 'b', 10: 'b'
+      },
+      answers: {},
+
+      // --- Scoring ---
+      POINTS_PER_CORRECT: 100,
+      POINTS_PER_SECOND: 10,
+      MIN_CORRECT_TO_WIN: 8,
+
+      // --- Timer ---
+      TIME_LIMIT: 180,
+      timeRemaining: 180,
+      timerInterval: null,
+      timerRunning: false,
+
+      // --- Transitions ---
+      transitioning: false,
+      musicPlaying: false,
+
+      // --- Image cache ---
+      cache: new Map(),
+
+      // --- DOM refs ---
+      dom: {},
+
+      // =============================================
+      // INIT
+      // =============================================
+      init() {
+        this.dom = {
+          loginScreen: document.getElementById('login-screen'),
+          gameScreen: document.getElementById('game-screen'),
+          endScreen: document.getElementById('end-screen'),
+          playerName: document.getElementById('player-name'),
+          playerPassword: document.getElementById('player-password'),
+          loginError: document.getElementById('login-error'),
+          startBtn: document.getElementById('start-btn'),
+          timerDisplay: document.getElementById('timer-display'),
+          scenarioIndicator: document.getElementById('scenario-indicator'),
+          scene: document.getElementById('scene'),
+          clickHint: document.getElementById('click-hint'),
+          buttons: document.getElementById('buttons'),
+          endTitle: document.getElementById('end-title'),
+          endStars: document.getElementById('end-stars'),
+          endSubtitle: document.getElementById('end-subtitle'),
+          scoreTotal: document.getElementById('score-total'),
+          scoreCorrect: document.getElementById('score-correct'),
+          scoreAnswerPts: document.getElementById('score-answer-pts'),
+          scoreTimeLeft: document.getElementById('score-time-left'),
+          scoreTimePts: document.getElementById('score-time-pts'),
+          leaderboardTable: document.getElementById('leaderboard-table'),
+          lbLoading: document.getElementById('lb-loading'),
+          restartBtn: document.getElementById('restart-btn'),
+          musicBtn: document.getElementById('music-toggle'),
+          bgm: document.getElementById('bgm'),
+        };
+
+        // Event listeners
+        this.dom.startBtn.addEventListener('click', () => this.handleLogin());
+        this.dom.playerPassword.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') this.handleLogin();
+        });
+        this.dom.playerName.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') this.dom.playerPassword.focus();
+        });
+        this.dom.scene.addEventListener('click', () => this.handleSceneClick());
+        this.dom.buttons.addEventListener('click', (e) => this.handleButtonClick(e));
+        this.dom.restartBtn.addEventListener('click', () => this.restart());
+        this.dom.musicBtn.addEventListener('click', () => this.toggleMusic());
+
+        // Preload opening image and first intro
+        this.preload('a.png');
+
+        // Hide timer bar initially
+        document.getElementById('timer-bar').style.display = 'none';
+        this.dom.clickHint.style.display = 'none';
+      },
+
+      // =============================================
+      // SCREENS
+      // =============================================
+      showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+      },
+
+      // =============================================
+      // LOGIN
+      // =============================================
+      handleLogin() {
+        const name = this.dom.playerName.value.trim();
+        const pw = this.dom.playerPassword.value.trim().toLowerCase();
+
+        if (!name) {
+          this.dom.loginError.textContent = 'Vul je naam in!';
+          this.dom.playerName.focus();
+          return;
+        }
+
+        if (pw !== this.PASSWORD) {
+          this.dom.loginError.textContent = 'Onjuist wachtwoord!';
+          this.dom.playerPassword.value = '';
+          this.dom.playerPassword.focus();
+          return;
+        }
+
+        this.playerName = name;
+        this.dom.loginError.textContent = '';
+        this.startIntro();
+      },
+
+      // =============================================
+      // INTRO
+      // =============================================
+      startIntro() {
+        this.phase = 'intro';
+        this.introIndex = 0;
+        this.showScreen('game-screen');
+
+        // Hide timer during intro
+        document.getElementById('timer-bar').style.display = 'none';
+        this.dom.clickHint.style.display = '';
+        this.dom.scene.classList.add('clickable');
+        this.dom.scene.src = 'images/a.png';
+        this.dom.buttons.innerHTML = '';
+
+        // Preload next
+        this.preload('b.png');
+      },
+
+      handleSceneClick() {
+        if (this.phase !== 'intro' || this.transitioning) return;
+
+        this.introIndex++;
+
+        if (this.introIndex >= this.INTRO_IMAGES.length) {
+          this.startScenarios();
+        } else {
+          const img = this.INTRO_IMAGES[this.introIndex] + '.png';
+          this.setImage(img);
+
+          // Preload ahead
+          const nextIdx = this.introIndex + 1;
+          if (nextIdx < this.INTRO_IMAGES.length) {
+            this.preload(this.INTRO_IMAGES[nextIdx] + '.png');
+          }
+          if (this.introIndex === this.INTRO_IMAGES.length - 1) {
+            this.preload('1.png');
+          }
+        }
+      },
+
+      // =============================================
+      // SCENARIOS
+      // =============================================
+      startScenarios() {
+        this.phase = 'scenario';
+        this.scenarioIndex = 1;
+        this.answers = {};
+        this.dom.scene.classList.remove('clickable');
+        this.dom.clickHint.style.display = 'none';
+
+        // Show timer
+        document.getElementById('timer-bar').style.display = 'flex';
+        this.timeRemaining = this.TIME_LIMIT;
+        this.updateTimerDisplay();
+        this.startTimer();
+
+        this.showScenario();
+      },
+
+      showScenario() {
+        const idx = this.scenarioIndex;
+        this.dom.scenarioIndicator.textContent = 'Scenario ' + idx + ' / ' + this.TOTAL_SCENARIOS;
+
+        // Has this scenario been answered already?
+        if (this.answers[idx]) {
+          // Show feedback (review mode)
+          this.phase = 'feedback';
+          const choice = this.answers[idx];
+          const img = idx + choice + '.png';
+          this.setImage(img, () => {
+            this.renderNavButtons(true);
+          });
+        } else {
+          // Show base scenario with choice buttons
+          this.phase = 'scenario';
+          const img = idx + '.png';
+          this.setImage(img, () => {
+            this.renderChoiceButtons();
+          });
+          // Preload feedback images
+          this.preload(idx + 'a.png');
+          this.preload(idx + 'b.png');
+        }
+      },
+
+      renderChoiceButtons() {
+        const idx = this.scenarioIndex;
+        let html = '';
+
+        // Choice buttons row
+        html += '<div style="display:flex;gap:16px;justify-content:center;width:100%">';
+        html += '<button class="btn" data-choice="a">Optie A</button>';
+        html += '<button class="btn" data-choice="b">Optie B</button>';
+        html += '</div>';
+
+        // Navigation row (only Vorige if not first scenario)
+        if (idx > 1) {
+          html += '<div style="display:flex;justify-content:center;width:100%;margin-top:12px">';
+          html += '<button class="btn btn-nav btn-prev">&#9664; Vorige</button>';
+          html += '</div>';
+        }
+
+        this.dom.buttons.innerHTML = html;
+      },
+
+      renderNavButtons(isReview) {
+        const idx = this.scenarioIndex;
+        const allAnswered = Object.keys(this.answers).length >= this.TOTAL_SCENARIOS;
+
+        let html = '';
+
+        if (isReview) {
+          html += '<div class="review-badge">Bekijk je antwoord (alleen-lezen)</div>';
+        }
+
+        // Navigation row — always full width with space-between
+        html += '<div style="display:flex;gap:16px;justify-content:center;width:100%;margin-top:8px">';
+
+        // Vorige
+        if (idx > 1) {
+          html += '<button class="btn btn-prev">&#9664; Vorige</button>';
+        }
+
+        // Volgende / Resultaat
+        if (allAnswered && idx === this.TOTAL_SCENARIOS) {
+          html += '<button class="btn btn-next" style="border-color:var(--yellow)">Resultaat &#9654;</button>';
+        } else if (this.answers[idx] && (idx < this.TOTAL_SCENARIOS || idx < this.highestAnswered())) {
+          html += '<button class="btn btn-next-nav">Volgende &#9654;</button>';
+        } else if (allAnswered) {
+          html += '<button class="btn btn-next" style="border-color:var(--yellow)">Resultaat &#9654;</button>';
+        }
+
+        html += '</div>';
+        this.dom.buttons.innerHTML = html;
+      },
+
+      highestAnswered() {
+        const keys = Object.keys(this.answers).map(Number);
+        return keys.length > 0 ? Math.max(...keys) : 0;
+      },
+
+      handleButtonClick(e) {
+        const btn = e.target.closest('.btn');
+        if (!btn || this.transitioning) return;
+
+        if (btn.dataset.choice) {
+          this.handleChoice(btn.dataset.choice);
+        } else if (btn.classList.contains('btn-next') || btn.classList.contains('btn-next-nav')) {
+          this.handleNext();
+        } else if (btn.classList.contains('btn-prev')) {
+          this.handlePrev();
+        }
+      },
+
+      handleChoice(choice) {
+        const idx = this.scenarioIndex;
+
+        // Record answer (only first time — can't change)
+        if (!this.answers[idx]) {
+          this.answers[idx] = choice;
+        }
+
+        this.phase = 'feedback';
+        const img = idx + choice + '.png';
+        this.setImage(img, () => {
+          this.renderNavButtons(false);
+        });
+
+        // Preload next scenario
+        if (idx < this.TOTAL_SCENARIOS) {
+          this.preload((idx + 1) + '.png');
+        }
+      },
+
+      handleNext() {
+        const allAnswered = Object.keys(this.answers).length >= this.TOTAL_SCENARIOS;
+
+        if (allAnswered && this.scenarioIndex === this.TOTAL_SCENARIOS) {
+          // All done — end game
+          this.endGame(false);
+          return;
+        }
+
+        if (this.scenarioIndex < this.TOTAL_SCENARIOS) {
+          this.scenarioIndex++;
+          this.showScenario();
+        } else if (allAnswered) {
+          this.endGame(false);
+        }
+      },
+
+      handlePrev() {
+        if (this.scenarioIndex > 1) {
+          this.scenarioIndex--;
+          this.showScenario();
+        }
+      },
+
+      // =============================================
+      // TIMER
+      // =============================================
+      startTimer() {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerRunning = true;
+
+        this.timerInterval = setInterval(() => {
+          this.timeRemaining--;
+          this.updateTimerDisplay();
+
+          if (this.timeRemaining <= 0) {
+            this.timeRemaining = 0;
+            this.updateTimerDisplay();
+            this.endGame(true);
+          }
+        }, 1000);
+      },
+
+      stopTimer() {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.timerRunning = false;
+      },
+
+      updateTimerDisplay() {
+        const mins = Math.floor(this.timeRemaining / 60);
+        const secs = this.timeRemaining % 60;
+        const display = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        this.dom.timerDisplay.textContent = display;
+
+        // Color coding
+        this.dom.timerDisplay.classList.remove('warning', 'danger');
+        if (this.timeRemaining <= 30) {
+          this.dom.timerDisplay.classList.add('danger');
+        } else if (this.timeRemaining <= 60) {
+          this.dom.timerDisplay.classList.add('warning');
+        }
+      },
+
+      // =============================================
+      // END GAME
+      // =============================================
+      endGame(timedOut) {
+        this.stopTimer();
+        this.phase = 'end';
+
+        // Calculate score
+        let correctCount = 0;
+        for (let i = 1; i <= this.TOTAL_SCENARIOS; i++) {
+          if (this.answers[i] === this.CORRECT_ANSWERS[i]) {
+            correctCount++;
+          }
+        }
+
+        const answerPoints = correctCount * this.POINTS_PER_CORRECT;
+        let timeBonus = timedOut ? 0 : this.timeRemaining * this.POINTS_PER_SECOND;
+
+        // Penalty: if fewer than 8 correct and time bonus > 1000, subtract 1000
+        if (correctCount < this.MIN_CORRECT_TO_WIN && timeBonus > 1000) {
+          timeBonus -= 1000;
+        }
+
+        const totalScore = answerPoints + timeBonus;
+        const isWin = !timedOut && correctCount >= this.MIN_CORRECT_TO_WIN;
+
+        const timeUsedSeconds = this.TIME_LIMIT - this.timeRemaining;
+
+        // Update end screen
+        if (isWin) {
+          this.dom.endTitle.textContent = 'Missie Volbracht!';
+          this.dom.endTitle.className = 'end-title win';
+          this.dom.endStars.textContent = '\u2605 \u2605 \u2605';
+          this.dom.endStars.className = 'end-stars win';
+          this.dom.endSubtitle.textContent = 'Bedankt voor het beveiligen van onze data!';
+        } else if (timedOut) {
+          this.dom.endTitle.textContent = 'Tijd is Op!';
+          this.dom.endTitle.className = 'end-title lose';
+          this.dom.endStars.textContent = '\u2716';
+          this.dom.endStars.className = 'end-stars lose';
+          this.dom.endSubtitle.textContent = 'Je hebt de 3 minuten overschreden.';
+        } else {
+          this.dom.endTitle.textContent = 'Niet Geslaagd';
+          this.dom.endTitle.className = 'end-title lose';
+          this.dom.endStars.textContent = '\u2716';
+          this.dom.endStars.className = 'end-stars lose';
+          this.dom.endSubtitle.textContent = 'Je hebt minimaal 8 goede antwoorden nodig.';
+        }
+
+        this.dom.scoreTotal.textContent = totalScore + ' punten';
+        this.dom.scoreCorrect.textContent = correctCount + ' / ' + this.TOTAL_SCENARIOS;
+        this.dom.scoreCorrect.className = 'score-value ' + (correctCount >= this.MIN_CORRECT_TO_WIN ? 'good' : 'bad');
+        this.dom.scoreAnswerPts.textContent = answerPoints + ' pts';
+        this.dom.scoreAnswerPts.className = 'score-value';
+
+        if (timedOut) {
+          this.dom.scoreTimeLeft.textContent = '0:00 (tijd op)';
+          this.dom.scoreTimeLeft.className = 'score-value bad';
+        } else {
+          const tMins = Math.floor(this.timeRemaining / 60);
+          const tSecs = this.timeRemaining % 60;
+          this.dom.scoreTimeLeft.textContent = tMins + ':' + String(tSecs).padStart(2, '0');
+          this.dom.scoreTimeLeft.className = 'score-value good';
+        }
+        this.dom.scoreTimePts.textContent = timeBonus + ' pts';
+        this.dom.scoreTimePts.className = 'score-value';
+
+        // Show end screen
+        this.showScreen('end-screen');
+
+        // Submit & load leaderboard
+        this.handleLeaderboard(totalScore, correctCount, timeUsedSeconds);
+      },
+
+      // =============================================
+      // LEADERBOARD / GOOGLE SHEETS
+      // =============================================
+      async handleLeaderboard(score, correct, timeUsed) {
+        this.dom.lbLoading.style.display = '';
+
+        if (!SHEET_API_URL) {
+          this.dom.lbLoading.textContent = 'Leaderboard niet beschikbaar (geen API URL geconfigureerd)';
+          return;
+        }
+
+        try {
+          // Submit score
+          const response = await fetch(SHEET_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'submit',
+              name: this.playerName,
+              score: score,
+              correct: correct,
+              timeUsed: timeUsed
+            })
+          });
+
+          const data = await response.json();
+
+          if (data && data.leaderboard) {
+            this.renderLeaderboard(data.leaderboard, data.playerRank);
+          } else {
+            this.dom.lbLoading.textContent = 'Kon leaderboard niet laden.';
+          }
+        } catch (err) {
+          console.error('Leaderboard error:', err);
+          this.dom.lbLoading.textContent = 'Fout bij laden leaderboard.';
+        }
+      },
+
+      renderLeaderboard(entries, playerRank) {
+        this.dom.lbLoading.style.display = 'none';
+
+        let html = '<div class="lb-row header">';
+        html += '<span class="lb-rank">#</span>';
+        html += '<span class="lb-name">Naam</span>';
+        html += '<span class="lb-score">Score</span>';
+        html += '</div>';
+
+        entries.forEach((entry, i) => {
+          const rank = i + 1;
+          const isMe = rank === playerRank;
+          html += '<div class="lb-row' + (isMe ? ' highlight' : '') + '">';
+          html += '<span class="lb-rank">' + rank + '</span>';
+          html += '<span class="lb-name">' + this.escapeHtml(entry.name) + (isMe ? ' (jij)' : '') + '</span>';
+          html += '<span class="lb-score">' + entry.score + '</span>';
+          html += '</div>';
+        });
+
+        this.dom.leaderboardTable.innerHTML = html;
+      },
+
+      escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      },
+
+      // =============================================
+      // IMAGE MANAGEMENT
+      // =============================================
+      setImage(filename, callback) {
+        this.transitioning = true;
+        this.dom.scene.classList.add('fade');
+
+        setTimeout(() => {
+          const cached = this.cache.get(filename);
+          if (cached) {
+            this.dom.scene.src = cached.src;
+            this.finishTransition(callback);
+          } else {
+            this.dom.scene.onload = () => {
+              this.dom.scene.onload = null;
+              this.finishTransition(callback);
+            };
+            this.dom.scene.src = 'images/' + filename;
+          }
+        }, 300);
+      },
+
+      finishTransition(callback) {
+        this.dom.scene.classList.remove('fade');
+        setTimeout(() => {
+          this.transitioning = false;
+          if (callback) callback();
+        }, 300);
+      },
+
+      preload(filename) {
+        if (this.cache.has(filename)) return;
+        const img = new Image();
+        img.src = 'images/' + filename;
+        this.cache.set(filename, img);
+      },
+
+      // =============================================
+      // AUDIO
+      // =============================================
+      toggleMusic() {
+        if (this.musicPlaying) {
+          this.dom.bgm.pause();
+          this.musicPlaying = false;
+          this.dom.musicBtn.textContent = 'Muziek Aan';
+          this.dom.musicBtn.classList.remove('active');
+        } else {
+          const p = this.dom.bgm.play();
+          if (p !== undefined) {
+            p.then(() => {
+              this.musicPlaying = true;
+              this.dom.musicBtn.textContent = 'Muziek Uit';
+              this.dom.musicBtn.classList.add('active');
+            }).catch(() => {});
+          }
+        }
+      },
+
+      // =============================================
+      // RESTART
+      // =============================================
+      restart() {
+        this.stopTimer();
+        this.phase = 'login';
+        this.introIndex = 0;
+        this.scenarioIndex = 1;
+        this.answers = {};
+        this.timeRemaining = this.TIME_LIMIT;
+        this.transitioning = false;
+
+        // Reset DOM
+        this.dom.playerPassword.value = '';
+        this.dom.loginError.textContent = '';
+        this.dom.buttons.innerHTML = '';
+        this.dom.timerDisplay.classList.remove('warning', 'danger');
+
+        // Reset leaderboard loading state
+        this.dom.leaderboardTable.innerHTML = '<div class="leaderboard-loading" id="lb-loading">Laden...</div>';
+        this.dom.lbLoading = document.getElementById('lb-loading');
+
+        this.showScreen('login-screen');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => Game.init());
+  </script>
+
+</body>
+</html>
