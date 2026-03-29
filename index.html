@@ -554,7 +554,7 @@
     </div>
 
     <div class="leaderboard-section" id="leaderboard-section">
-      <div class="leaderboard-title">Leaderboard</div>
+      <div class="leaderboard-title">Leaderboard Top 5</div>
       <div class="leaderboard-table" id="leaderboard-table">
         <div class="leaderboard-loading" id="lb-loading">Laden...</div>
       </div>
@@ -585,28 +585,29 @@
     const Game = {
       // --- Auth ---
       playerName: '',
-      PASSWORD: 'staatsgeheim',
+      PASSWORD: 'vertrouwelijk',
 
       // --- Phase ---
       phase: 'login', // 'login' | 'intro' | 'scenario' | 'feedback' | 'end'
 
       // --- Intro ---
       introIndex: 0,
-      INTRO_IMAGES: ['a', 'b', 'c', 'c1', 'd', 'e', 'e1', 'f', 'g'],
+      INTRO_IMAGES: ['a', 'b', 'c', 'c1', 'd', 'e', 'e1', 'g'],
 
       // --- Scenarios ---
       scenarioIndex: 1,
-      TOTAL_SCENARIOS: 10,
+      TOTAL_SCENARIOS: 8,
+      // Maps game index (1-8) to image file number
+      SCENARIO_IMAGE_MAP: { 1: '1', 2: '2', 3: '3', 4: '5', 5: '6', 6: '7', 7: '9', 8: '10' },
       CORRECT_ANSWERS: {
-        1: 'b', 2: 'b', 3: 'a', 4: 'a', 5: 'a',
-        6: 'b', 7: 'b', 8: 'b', 9: 'b', 10: 'b'
+        1: 'a', 2: 'b', 3: 'a', 4: 'a', 5: 'b', 6: 'a', 7: 'b', 8: 'b'
       },
       answers: {},
 
       // --- Scoring ---
       POINTS_PER_CORRECT: 100,
       POINTS_PER_SECOND: 10,
-      MIN_CORRECT_TO_WIN: 8,
+      MIN_CORRECT_TO_WIN: 6,
 
       // --- Timer ---
       TIME_LIMIT: 180,
@@ -770,8 +771,14 @@
         this.showScenario();
       },
 
+      // Map game index to image file number
+      imgNum(idx) {
+        return this.SCENARIO_IMAGE_MAP[idx] || idx;
+      },
+
       showScenario() {
         const idx = this.scenarioIndex;
+        const num = this.imgNum(idx);
         this.dom.scenarioIndicator.textContent = 'Scenario ' + idx + ' / ' + this.TOTAL_SCENARIOS;
 
         // Has this scenario been answered already?
@@ -779,20 +786,20 @@
           // Show feedback (review mode)
           this.phase = 'feedback';
           const choice = this.answers[idx];
-          const img = idx + choice + '.png';
+          const img = num + choice + '.png';
           this.setImage(img, () => {
             this.renderNavButtons(true);
           });
         } else {
           // Show base scenario with choice buttons
           this.phase = 'scenario';
-          const img = idx + '.png';
+          const img = num + '.png';
           this.setImage(img, () => {
             this.renderChoiceButtons();
           });
           // Preload feedback images
-          this.preload(idx + 'a.png');
-          this.preload(idx + 'b.png');
+          this.preload(num + 'a.png');
+          this.preload(num + 'b.png');
         }
       },
 
@@ -867,6 +874,7 @@
 
       handleChoice(choice) {
         const idx = this.scenarioIndex;
+        const num = this.imgNum(idx);
 
         // Record answer (only first time — can't change)
         if (!this.answers[idx]) {
@@ -874,14 +882,14 @@
         }
 
         this.phase = 'feedback';
-        const img = idx + choice + '.png';
+        const img = num + choice + '.png';
         this.setImage(img, () => {
           this.renderNavButtons(false);
         });
 
         // Preload next scenario
         if (idx < this.TOTAL_SCENARIOS) {
-          this.preload((idx + 1) + '.png');
+          this.preload(this.imgNum(idx + 1) + '.png');
         }
       },
 
@@ -969,7 +977,7 @@
         const answerPoints = correctCount * this.POINTS_PER_CORRECT;
         let timeBonus = timedOut ? 0 : this.timeRemaining * this.POINTS_PER_SECOND;
 
-        // Penalty: if fewer than 8 correct and time bonus > 1000, subtract 1000
+        // Penalty: if fewer than MIN_CORRECT_TO_WIN correct and time bonus > 1000, subtract 1000
         if (correctCount < this.MIN_CORRECT_TO_WIN && timeBonus > 1000) {
           timeBonus -= 1000;
         }
@@ -1066,13 +1074,16 @@
       renderLeaderboard(entries, playerRank) {
         this.dom.lbLoading.style.display = 'none';
 
+        // Show only top 5
+        const top = entries.slice(0, 5);
+
         let html = '<div class="lb-row header">';
         html += '<span class="lb-rank">#</span>';
         html += '<span class="lb-name">Naam</span>';
         html += '<span class="lb-score">Score</span>';
         html += '</div>';
 
-        entries.forEach((entry, i) => {
+        top.forEach((entry, i) => {
           const rank = i + 1;
           const isMe = rank === playerRank;
           html += '<div class="lb-row' + (isMe ? ' highlight' : '') + '">';

@@ -42,7 +42,7 @@
 // >>> VUL HIER JE SPREADSHEET ID IN <<<
 const SPREADSHEET_ID = 'HIER_JE_SPREADSHEET_ID';
 const SHEET_NAME = 'Leaderboard';
-const MAX_LEADERBOARD_ENTRIES = 50;
+const MAX_LEADERBOARD_ENTRIES = 500;
 
 // =============================================================
 // GET endpoint — leaderboard ophalen
